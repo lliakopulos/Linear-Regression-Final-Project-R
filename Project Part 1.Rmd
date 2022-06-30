@@ -1,0 +1,257 @@
+---
+title: "Project- Part 1 INFS 494"
+output: html_document
+by: Leticia Liakopulos
+---
+
+# Description
+
+The physical data set you used for your analysis:
+
+1.Citation of Dataset and URL:
+
+J Ogozaly. (2021, October). Data Science and STEM Salaries, Version 1.0. Retrieved January 20,2022 from https://www.kaggle.com/jackogozaly/data-science-and-stem-salaries/metadata.
+
+https://www.kaggle.com/jackogozaly/data-science-and-stem-salaries/metadata
+
+
+2.Description of any data transformations including legible and repeatable R code.
+
+Since the dataset was too large for R studio to read, I selected the first 7000 rows of data to make the analysis. When I runned the different codes on the file below, I can see that years of experience influence a lot on the yearly compensation of the Data Science and STEM employees. Below we can see different R codes that confirm that the amount of clusters that can be used is 3. The analysis is below the Description of the Project.
+
+3.Description of your data including any supporting graphs or analysis.
+
+I analyzed the dataset "Salary Dataset" with a Cluster Analysis. The dataset has data on Data Science and STEM employees from all over the US. Due to the amount of information, I created the file modified so that R can run the codes. In the analysis, I created different amount of clusters and played with the charts to see exactly how many clusters of yearly compensations vs years of experience of these employees. 
+
+The R analysis that we can see repeable on the data is that the "elbow" of both charts is at 3, so the amount of clusters is 3. On the last chart, the ggplot, we can see how the salaries depend on the amount of years of experience and how it can be divided in 3 different groups. Below there are legible and repeatable R codes that can support the analysis.
+
+4.Description of your project proposal: what business questions do you hope to uncover in your analysis?
+
+With this project, I want to get to learn more about how the amount of years of experience, gender, and positions can affect the salaries. I used Cluster Analysis to be able to analyze within the 3 different clusters how this salaries can be impacted and what other variables play roles on the pay of Data Science and STEM majors. One of my main questions is if gender is a factor that affect the yearly compensation since it caught my attention how significant is the difference between male(3488) and females(503) in these positions.
+
+I can really relate to this analysis since I will be graduating with a Data Science and STEM Master in a few months and can serve as an expectation of what to expect when getting out of college.
+
+# ANALYSIS
+
+# Method #1- Cluster Analysis
+
+### load necessary libraries
+```{r}
+library(cluster)
+library(dplyr)
+library(ggplot2)
+library(corrplot)
+```
+
+### load data
+```{r}
+#create a file path object  
+file_dir <- "~/Desktop/MSBDA/Winter 2021:22/INFS 494/tareas" 
+# load the data set
+SalaryDataset <- read.csv(paste0(file_dir, "/Levels_Salary_Data_modified.csv"), stringsAsFactors = TRUE)
+```
+
+### Data Preparation
+```{r}
+clusterVariables <- c("totalyearlycompensation",
+                      "yearsofexperience",
+                      "yearsatcompany",
+                      "basesalary",
+                      "bonus"
+                      ) 
+```
+
+### set seed
+```{r}
+set.seed(1)
+```
+
+# Analysis
+```{r}
+head(SalaryDataset)
+```
+
+### run kmeans for various cluster sizes
+```{r}
+sd.kmeans.2 <- kmeans(scale(SalaryDataset[,clusterVariables]), centers = 2, nstart=50)
+sd.kmeans.3 <- kmeans(scale(SalaryDataset[,clusterVariables]), centers = 3, nstart=50)
+sd.kmeans.4 <- kmeans(scale(SalaryDataset[,clusterVariables]), centers = 4, nstart=50)
+sd.kmeans.5 <- kmeans(scale(SalaryDataset[,clusterVariables]), centers = 5, nstart=50)
+sd.kmeans.6 <- kmeans(scale(SalaryDataset[,clusterVariables]), centers = 6, nstart=50)
+sd.kmeans.7 <- kmeans(scale(SalaryDataset[,clusterVariables]), centers = 7, nstart=50)
+sd.kmeans.8 <- kmeans(scale(SalaryDataset[,clusterVariables]), centers = 8, nstart=50)
+sd.kmeans.9 <- kmeans(scale(SalaryDataset[,clusterVariables]), centers = 9, nstart=50)
+sd.kmeans.10 <- kmeans(scale(SalaryDataset[,clusterVariables]), centers = 10, nstart=50)
+
+```
+
+### Dataframe (tabular) output of VAF
+```{r}
+(kmeans.solution <- data.frame(k = 2:10, VAF = c(
+    sd.kmeans.2$betweenss/sd.kmeans.2$totss,
+    sd.kmeans.3$betweenss/sd.kmeans.3$totss,
+    sd.kmeans.4$betweenss/sd.kmeans.4$totss,
+    sd.kmeans.5$betweenss/sd.kmeans.5$totss,
+    sd.kmeans.6$betweenss/sd.kmeans.6$totss,
+    sd.kmeans.7$betweenss/sd.kmeans.7$totss,
+    sd.kmeans.8$betweenss/sd.kmeans.8$totss,
+    sd.kmeans.9$betweenss/sd.kmeans.9$totss,
+    sd.kmeans.10$betweenss/sd.kmeans.10$totss
+)))
+```
+
+### Scree plot
+```{r}
+plot(VAF~k, data = kmeans.solution, type = 'o', main = "Scree Plot", pch=16,
+    col="steelblue2")
+```
+
+```{r}
+ss.2 <- silhouette(sd.kmeans.2$cluster, dist(SalaryDataset[,clusterVariables]))
+ss.3 <- silhouette(sd.kmeans.3$cluster, dist(SalaryDataset[,clusterVariables]))
+ss.4 <- silhouette(sd.kmeans.4$cluster, dist(SalaryDataset[,clusterVariables]))
+ss.5 <- silhouette(sd.kmeans.5$cluster, dist(SalaryDataset[,clusterVariables]))
+ss.6 <- silhouette(sd.kmeans.6$cluster, dist(SalaryDataset[,clusterVariables]))
+ss.7 <- silhouette(sd.kmeans.7$cluster, dist(SalaryDataset[,clusterVariables]))
+ss.8 <- silhouette(sd.kmeans.8$cluster, dist(SalaryDataset[,clusterVariables]))
+ss.9 <- silhouette(sd.kmeans.9$cluster, dist(SalaryDataset[,clusterVariables]))
+ss.10 <- silhouette(sd.kmeans.10$cluster, dist(SalaryDataset[,clusterVariables]))
+```
+
+### Dataframe (tabular) output of the average silhouette score
+```{r}
+kmeans.ss <- data.frame(k = 2:10, ss = c(
+    mean(ss.2[,3]),
+    mean(ss.3[,3]),
+    mean(ss.4[,3]),
+    mean(ss.5[,3]),
+    mean(ss.6[,3]),
+    mean(ss.7[,3]),
+    mean(ss.8[,3]),
+    mean(ss.9[,3]),
+    mean(ss.10[,3])
+    ))
+```
+
+### Plot
+```{r}
+plot(ss~k, data = kmeans.ss, type = 'o', main = "Average Silhouette Scores", pch=16,
+    col="darkolivegreen3")
+```
+```{r}
+summary(ss.4)
+```
+
+Analysis of Means
+
+```{r}
+as_tibble(data.frame(SalaryDataset[ ,clusterVariables], 
+                  cluster.no = sd.kmeans.4$cluster)) %>% 
+    group_by(cluster.no) %>% 
+    summarise(
+      mean(totalyearlycompensation),
+      mean(yearsofexperience),
+      mean(yearsatcompany),
+      mean(basesalary),
+      mean(bonus)
+     )
+```
+
+Compare with gender
+
+```{r}
+summary(SalaryDataset$gender)
+```
+
+```{r}
+as_tibble(data.frame(gender = SalaryDataset$gender, 
+                  cluster.no = sd.kmeans.3$cluster)) %>% 
+    group_by(cluster.no, gender) %>% 
+    tally()
+```
+```{r}
+ggplot(SalaryDataset, 
+       aes(totalyearlycompensation, 
+           yearsofexperience, 
+           color = as.factor(sd.kmeans.3$cluster)
+           )
+       ) + geom_point()
+```
+
+# Method #2- Regression Analysis
+
+```{r}
+cor.matrix <- cor(SalaryDataset[,clusterVariables])
+```
+
+```{r}
+summary(c(abs(cor.matrix)))
+```
+
+```{r}
+quantile(c(abs(cor.matrix[,2])), na.rm = T)
+```
+
+### Correlation Plots
+
+```{r}
+corrplot(cor.matrix, 
+         method = "square", 
+         addCoef.col="black",
+         number.cex=0.75,
+         type = "upper",
+         diag = FALSE)
+```
+
+I used this function to see is this values could be used and confirm there were no blanks
+```{r}
+lapply(SalaryDataset[c('totalyearlycompensation', 'gender')], unique)
+```
+
+** For this model, I couldn't use the . (which compares with everythis in the dataset) since other columns in the dataset had less than 2 variables, so I created this model that used the relevant columns.
+** In a fitted model, I would created an improved model using the most relevant variables of this ones.
+```{r}
+model = lm(totalyearlycompensation ~ totalyearlycompensation+ yearsofexperience +gender+ yearsatcompany+bonus, data= SalaryDataset)
+summary(model)
+```
+
+```{r}
+levels(SalaryDataset$gender)
+```
+
+# Improved & Fitted Model
+
+```{r}
+model.fitted = lm(totalyearlycompensation ~ totalyearlycompensation* yearsofexperience +gender, data= SalaryDataset)
+summary(model.fitted)
+```
+
+1. What question is driving the analysis?
+    The main question that drives this analysis 
+
+2. What is the data you are using and why do you expect it to answer your question(s)?
+  -
+
+3. How you manipulated the original data?
+  -
+
+4. What techniques you used and why (how do they relate to your questions)?
+  -
+
+5. How well did the data mining techniques perform on your data set?
+  -
+
+6. What did you learn? What did the data tell you?
+  -
+
+7. What did the data not tell you
+  -
+
+8. What would you want to do differently? How could your analysis be improved?
+  -
+
+9. Recommendations for action.
+  -
+
+
+
